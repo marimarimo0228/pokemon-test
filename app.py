@@ -7,6 +7,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pokemon.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
+with app.app_context():
+    # テーブルがなければ作成する（これでエラー）
+    db.create_all()
+    
+
 @app.route('/')
 def index():
     # 手持ちポケモン（ユーザーID: 1）のリストを取得
@@ -50,5 +55,6 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
