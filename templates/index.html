@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ポケモン対戦支援システム ✨⚔️</title>
+    <title>ポケモンバトル支援システム </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f0f8ff; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; }
@@ -20,25 +20,24 @@
 
 <div class="container">
     <div class="header">
-        <h1>ポケモン対戦支援システム 🏯⚔️</h1>
-        <p>〜 データベースの力で勝利を掴み取りましょうぞ！ 〜</p>
+        <h1>ポケモンバトル支援システム </h1>
     </div>
 
     <div class="row">
         <div class="col-md-5">
             <div class="card p-3 shadow-sm">
-                <h3>現在の手持ち 🎒✨</h3>
+                <h3>現在の手持ち </h3>
                 <ul class="party-list">
                     {% for p in my_party %}
                     <li class="party-item">
                         <span><strong>{{ p.pokemon.pokemon_name }}</strong> <small class="text-muted">(ID:{{ p.pokemon.pokemon_id }})</small></span>
                         <form action="{{ url_for('delete_pokemon', user_pokemon_id=p.user_pokemon_id) }}" method="POST" style="margin: 0;">
-                            <button type="submit" class="btn-delete">放流（削除）🌸</button>
+                            <button type="submit" class="btn-delete">削除</button>
                         </form>
                     </li>
                     {% endfor %}
                     {% if not my_party %}
-                    <p class="text-muted">手持ちが空にござる。下のフォームから召喚なされ！</p>
+                    <p class="text-muted">手持ちが空です！下記から登録してください！！</p>
                     {% endif %}
                 </ul>
 
@@ -47,29 +46,29 @@
                 <h5>新しいポケモンを登録 ⚔️</h5>
                 <form action="{{ url_for('add_pokemon') }}" method="POST" class="d-flex gap-2">
                     <select name="pokemon_id" class="form-select" required>
-                        <option value="">選択してくだされ...</option>
+                        <option value="">選択してください</option>
                         {% for p in all_pokemon %}
                         <option value="{{ p.pokemon_id }}">{{ p.pokemon_name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn btn-primary">登録！✨</button>
+                    <button type="submit" class="btn btn-primary">登録！</button>
                 </form>
             </div>
         </div>
 
         <div class="col-md-7">
             <div class="card p-3 shadow-sm border-danger">
-                <h3>対戦相手を選択 👿⚔️</h3>
+                <h3>対戦相手を選択 </h3>
                 <form action="/" method="GET" class="d-flex gap-2 mb-3">
                     <select name="enemy_id" class="form-select" required>
-                        <option value="">相手ポケモンを選んでくだされ...</option>
+                        <option value="">相手ポケモンを選んでください</option>
                         {% for p in all_pokemon %}
                         <option value="{{ p.pokemon_id }}" {% if enemy and enemy.pokemon_id == p.pokemon_id %}selected{% endif %}>
                             {{ p.pokemon_name }}
                         </option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn btn-danger">解析！🔥</button>
+                    <button type="submit" class="btn btn-danger">解析！</button>
                 </form>
 
                 {% if enemy %}
@@ -77,7 +76,7 @@
                     <strong>対戦相手: {{ enemy.pokemon_name }}</strong> (タイプID: {{ enemy.type_id }})
                 </div>
 
-                <h4>推奨ポケモン（選出）🌟</h4>
+                <h4>推奨ポケモン（選出）</h4>
                 {% if results %}
                     {% for p_master, eff in results %}
                     <div class="result-card">
@@ -91,7 +90,7 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p class="text-danger mt-3">手持ちの中に、有利な相性のポケモンがいませぬ……！不覚！💦</p>
+                    <p class="text-danger mt-3">手持ちの中に、有利な相性のポケモンがいません</p>
                 {% endif %}
                 {% endif %}
             </div>
@@ -100,10 +99,11 @@
 
     <footer class="mt-5 text-center text-muted">
         <hr>
-        <p>&copy; 2026 ポケモン対戦支援システム開発部隊 🏯🎀</p>
+        <p>&copy; 2026 フレンダーズ </p>
     </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
