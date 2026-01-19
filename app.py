@@ -28,7 +28,6 @@ with app.app_context():
         db.session.commit()
 
         # 2. ポケモンマスタ（121体）の登録
-        # (id, name, type_id, atk, def, spd)
         pokemon_list = [
             (1,'フシギダネ',4,49,49,45), (2,'フシギソウ',4,62,63,60), (3,'フシギバナ',4,82,83,80),
             (4,'ヒトカゲ',2,52,43,65), (5,'リザード',2,64,58,80), (6,'リザードン',2,84,78,100),
@@ -90,7 +89,7 @@ with app.app_context():
         for p_id, name, t_id, atk, df, spd in pokemon_list:
             db.session.add(PokemonMaster(pokemon_id=p_id, pokemon_name=name, type_id=t_id, attack=atk, defense=df, speed=spd))
         
-        # 3. タイプ相性（一部）の登録
+        # 3. タイプ相性（一部）
         effectiveness_data = [
             (2, 4, 2.0), (3, 2, 2.0), (4, 3, 2.0), (5, 3, 2.0), (7, 1, 2.0),
             (2, 3, 0.5), (3, 4, 0.5), (4, 2, 0.5), (5, 4, 0.5)
@@ -99,20 +98,13 @@ with app.app_context():
             db.session.add(TypeEffectiveness(attack_type_id=atk_id, defense_type_id=def_id, effectiveness=eff))
         
         db.session.commit()
-        print("🌸 マスタデータの配備が完了しましたぞ！パピプペポ〜ン！")
+        print("🌸 マスタデータの配備が完了しましたぞ！")
 
-# --- ルーティング ---
+# --- ルーティング（ここが修正のキモでござる！⚔️） ---
+
 @app.route('/')
-@app.route('/delete/<int:user_pokemon_id>', methods=['POST'])
-def delete_pokemon(user_pokemon_id):
-    # IDを頼りに対象のポケモンを特定なされ！
-    target = UserPokemon.query.get(user_pokemon_id)
-    if target:
-        db.session.delete(target)
-        db.session.commit()
-        print(f"🌸 ID:{user_pokemon_id} のポケモンを野に放しましたぞ！")
-    return redirect(url_for('index'))
 def index():
+    # 🌟 トップページの処理をここで行う！
     my_party = UserPokemon.query.filter_by(user_id=1).all()
     all_pokemon = PokemonMaster.query.all()
     
@@ -132,6 +124,16 @@ def index():
 
     return render_template('index.html', my_party=my_party, all_pokemon=all_pokemon, results=results, enemy=enemy)
 
+@app.route('/delete/<int:user_pokemon_id>', methods=['POST'])
+def delete_pokemon(user_pokemon_id):
+    # 🌟 削除の処理はこっちの専用ルートで行う！
+    target = UserPokemon.query.get(user_pokemon_id)
+    if target:
+        db.session.delete(target)
+        db.session.commit()
+        print(f"🌸 ID:{user_pokemon_id} を放流しました！")
+    return redirect(url_for('index'))
+
 @app.route('/add', methods=['POST'])
 def add_pokemon():
     pid = request.form.get('pokemon_id')
@@ -141,9 +143,7 @@ def add_pokemon():
         db.session.commit()
     return redirect(url_for('index'))
 
-# --- 実行部分（Render対応） ---
+# --- 実行部分 ---
 if __name__ == '__main__':
-    # Render環境ではPORT環境変数からポートを取得、ローカルでは5000番
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
