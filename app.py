@@ -103,6 +103,15 @@ with app.app_context():
 
 # --- ルーティング ---
 @app.route('/')
+@app.route('/delete/<int:user_pokemon_id>', methods=['POST'])
+def delete_pokemon(user_pokemon_id):
+    # IDを頼りに対象のポケモンを特定なされ！
+    target = UserPokemon.query.get(user_pokemon_id)
+    if target:
+        db.session.delete(target)
+        db.session.commit()
+        print(f"🌸 ID:{user_pokemon_id} のポケモンを野に放しましたぞ！")
+    return redirect(url_for('index'))
 def index():
     my_party = UserPokemon.query.filter_by(user_id=1).all()
     all_pokemon = PokemonMaster.query.all()
@@ -137,3 +146,4 @@ if __name__ == '__main__':
     # Render環境ではPORT環境変数からポートを取得、ローカルでは5000番
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
