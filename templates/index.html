@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ポケモン対戦支援システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .main-card { border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .recommendation-top { background-color: #e8f5e9; border-left: 5px solid #2e7d32; }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <h1 class="text-center mb-5 text-primary fw-bold">⚔️ ポケモン対戦支援システム 🌸</h1>
+    
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card main-card h-100">
+                <div class="card-header bg-white fw-bold">手持ちポケモンの登録</div>
+                <div class="card-body">
+                    <form action="/add" method="post" class="mb-4 d-flex gap-2">
+                        <select name="pokemon_id" class="form-select">
+                            {% for p in all_pokemon %}
+                            <option value="{{ p.pokemon_id }}">{{ p.pokemon_name }} (SPD: {{ p.speed }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary text-nowrap">登録</button>
+                    </form>
+                    <div class="list-group">
+                        {% for item in my_party %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.pokemon.pokemon_name }}
+                            <span class="badge bg-secondary">SPD: {{ item.pokemon.speed }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card main-card h-100">
+                <div class="card-header bg-white fw-bold">対戦相手の指定と解析</div>
+                <div class="card-body">
+                    <form action="/" method="get" class="mb-4 d-flex gap-2">
+                        <select name="enemy_id" class="form-select">
+                            {% for p in all_pokemon %}
+                            <option value="{{ p.pokemon_id }}" {{ 'selected' if enemy and enemy.pokemon_id == p.pokemon_id }}>
+                                {{ p.pokemon_name }} ({{ p.type.type_name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-danger text-nowrap">最適選出を計算</button>
+                    </form>
+
+                    {% if results %}
+                    <h5 class="mb-3">推奨されるポケモン</h5>
+                    {% for p, eff in results %}
+                    <div class="card mb-2 {{ 'recommendation-top' if loop.first else '' }}">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>第{{ loop.index }}位: {{ p.pokemon_name }}</strong>
+                                <span class="text-success fw-bold">{{ eff }}倍ダメージ</span>
+                            </div>
+                            <small class="text-muted">素早さ: {{ p.speed }} / タイプ: {{ p.type.type_name }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
