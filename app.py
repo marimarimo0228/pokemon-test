@@ -15,7 +15,7 @@ with app.app_context():
     
     # マスタデータが空かどうか確認
     if Type.query.first() is None:
-        print("⚔️ データベースが空でござる！121体のポケモンを召喚しますぞ！")
+        print("データベースが空です。121体のポケモンを登録します")
         
         # 1. タイプの登録
         types_data = [
@@ -147,3 +147,4 @@ def add_pokemon():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
