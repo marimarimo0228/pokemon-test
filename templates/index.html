@@ -161,14 +161,14 @@
                                         <span class="badge badge-type rounded-pill">{{ p.pokemon.type.type_name }}</span>
                                     </td>
                                     <td>
-                                        <form action="/update/{{ p.user_pokemon_id }}" method="POST" class="d-flex">
+                                        <form action="/update/{{ p.user_pokemon_id }}" method="POST" class="d-flex align-items-center">
                                             <input type="text" name="memo" value="{{ p.memo }}" class="form-control form-control-sm me-1" style="min-width: 80px;">
-                                            <button type="submit" class="btn btn-sm btn-outline-success">保存</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-success text-nowrap">保存</button>
                                         </form>
                                     </td>
                                     <td>
                                         <form action="/delete/{{ p.user_pokemon_id }}" method="POST">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap">削除</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -197,7 +197,9 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="btn btn-primary">解析開始</button>
+                        <button type="submit" class="btn btn-primary" style="height: auto; line-height: 1.2;">
+                            分析<br>開始
+                        </button>
                     </form>
 
                     {% if enemy %}
@@ -207,10 +209,11 @@
                         <span class="badge bg-dark ms-2">{{ enemy.type.type_name }}</span>
                     </div>
 
-                    <h5 class="mt-4 mb-3 fw-bold text-danger">⚡ 推奨ポケモン (有利順)</h5>
                     {% if results %}
-                        <div class="list-group">
+                        <h5 class="mt-4 mb-3 fw-bold text-danger">⚡ 推奨ポケモン (有利順)</h5>
+                        <div class="list-group mb-4">
                         {% for p_master, eff_row, user_p in results %}
+                            {% if eff_row.effectiveness > 0.9 %}
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="fw-bold">
@@ -223,41 +226,41 @@
                                         タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
                                     </small>
                                 </div>
-                                
-                                {% if eff_row.effectiveness <= 0.9 %}
-                                    <span class="badge bg-primary rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
-                                {% else %}
-                                    <span class="badge bg-danger rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
-                                {% endif %}
+                                <span class="badge bg-danger rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
                             </div>
+                            {% endif %}
                         {% endfor %}
                         </div>
+
+                        <h5 class="mb-3 fw-bold text-primary">😰 いまひとつのポケモン</h5>
+                        <div class="list-group">
+                        {% for p_master, eff_row, user_p in results %}
+                            {% if eff_row.effectiveness <= 0.9 %}
+                            <div class="list-group-item list-group-item-light d-flex justify-content-between align-items-center" style="opacity: 0.8;">
+                                <div>
+                                    <div class="fw-bold text-muted">
+                                        {{ p_master.pokemon_name }}
+                                        {% if user_p.memo %}
+                                            <span class="badge bg-secondary text-light ms-2">📝 {{ user_p.memo }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">
+                                        タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+
                     {% else %}
                         <div class="text-center py-5 text-muted">
                             <p>効果抜群のポケモンがいません…<br>等倍でゴリ押しするか、壁役を選出しましょう。</p>
                         </div>
                     {% endif %}
+                    
                     {% else %}
                         <div class="text-center py-5 text-muted opacity-50">
                             <h1 class="display-1">VS</h1>
                             <p>相手ポケモンを選択して解析を開始してください</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="text-center mt-5 mb-5">
-        <hr class="mb-4">
-        <form action="/reset" method="POST" onsubmit="return confirm('本当に初期化しますか？\n追加したポケモンも全て消えます！');">
-            <button type="submit" class="btn btn-outline-secondary btn-sm">
-                ⚠️ システムを初期化する (121体に戻す)
-            </button>
-        </form>
-        <p class="text-muted small mt-2">&copy; 2026 Pokémon Battle Support System</p>
-    </div>
-</div>
-
-</body>
-</html>
