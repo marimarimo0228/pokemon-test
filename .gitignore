@@ -1,0 +1,13 @@
+# Pythonの一時ファイル
+__pycache__/
+*.py[cod]
+
+# 環境変数ファイル
+.env
+
+# 仮想環境
+venv/
+.venv/
+
+# SQLiteファイル（今回は使いませんが念のため）
+*.db
