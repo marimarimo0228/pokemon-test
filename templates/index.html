@@ -96,7 +96,7 @@
             </div>
 
             <div class="card border-primary">
-                <div class="card-header bg-primary text-white">🧪 未知のポケモンを発見（カスタム作成）</div>
+                <div class="card-header bg-primary text-white">🧪 未知のポケモンを登録（カスタム作成）</div>
                 <div class="card-body">
                     <form action="/add_custom" method="POST">
                         <div class="row g-2 mb-2">
@@ -129,7 +129,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header">🎒 現在の手持ち</div>
+                <div class="card-header">現在の手持ち</div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-custom table-striped mb-0">
@@ -172,7 +172,7 @@
 
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header red-theme">⚔️ バトルアナライザー</div>
+                <div class="card-header red-theme">⚔️ 分析フィールド</div>
                 <div class="card-body">
                     <label class="form-label fw-bold">対戦相手を選択</label>
                     <form action="/" method="GET" class="d-flex gap-2 mb-4">
@@ -197,7 +197,7 @@
                     </div>
 
                     {% if results %}
-                        <h5 class="mt-4 mb-3 fw-bold text-danger">推奨ポケモン (等倍以上)</h5>
+                        <h5 class="mt-4 mb-3 fw-bold text-danger">推奨ポケモン (1倍以上)</h5>
                         <div class="list-group mb-4">
                         {% for p_master, user_p, eff_value in results %}
                             {% if eff_value >= 1.0 %}
@@ -269,3 +269,4 @@
 
 </body>
 </html>
+
