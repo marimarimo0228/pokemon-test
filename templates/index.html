@@ -70,7 +70,7 @@
 
 <nav class="navbar mb-4">
     <div class="container">
-        <span class="navbar-brand">⚡ Pokémon Battle Support</span>
+        <span class="navbar-brand">ポケモンバトル支援システム</span>
     </div>
 </nav>
 
@@ -123,7 +123,7 @@
                                 <input type="text" name="custom_memo" class="form-control" placeholder="例: 最強のポケモン">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-dark w-100">データを作成して手持ちへ！✨</button>
+                        <button type="submit" class="btn btn-dark w-100">データを作成して手持ちへ！</button>
                     </form>
                 </div>
             </div>
@@ -197,10 +197,10 @@
                     </div>
 
                     {% if results %}
-                        <h5 class="mt-4 mb-3 fw-bold text-danger">⚡ 推奨ポケモン (有利順)</h5>
+                        <h5 class="mt-4 mb-3 fw-bold text-danger">推奨ポケモン (等倍以上)</h5>
                         <div class="list-group mb-4">
-                        {% for p_master, eff_row, user_p in results %}
-                            {% if eff_row.effectiveness > 0.9 %}
+                        {% for p_master, user_p, eff_value in results %}
+                            {% if eff_value >= 1.0 %}
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="fw-bold">
@@ -213,16 +213,16 @@
                                         タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
                                     </small>
                                 </div>
-                                <span class="badge bg-danger rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
+                                <span class="badge bg-danger rounded-pill fs-6">{{ eff_value }}倍</span>
                             </div>
                             {% endif %}
                         {% endfor %}
                         </div>
 
-                        <h5 class="mb-3 fw-bold text-primary">😰 いまひとつのポケモン</h5>
+                        <h5 class="mb-3 fw-bold text-primary">いまひとつのポケモン</h5>
                         <div class="list-group">
-                        {% for p_master, eff_row, user_p in results %}
-                            {% if eff_row.effectiveness <= 0.9 %}
+                        {% for p_master, user_p, eff_value in results %}
+                            {% if eff_value < 1.0 %}
                             <div class="list-group-item list-group-item-light d-flex justify-content-between align-items-center" style="opacity: 0.8;">
                                 <div>
                                     <div class="fw-bold text-muted">
@@ -235,14 +235,14 @@
                                         タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
                                     </small>
                                 </div>
-                                <span class="badge bg-primary rounded-pill fs-6">{{ eff_row.effectiveness }}倍</span>
+                                <span class="badge bg-primary rounded-pill fs-6">{{ eff_value }}倍</span>
                             </div>
                             {% endif %}
                         {% endfor %}
                         </div>
                     {% else %}
                         <div class="text-center py-5 text-muted">
-                            <p>解析結果がありません。</p>
+                            <p>手持ちポケモンがいません。</p>
                         </div>
                     {% endif %}
                     {% else %}
