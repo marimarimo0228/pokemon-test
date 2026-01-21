@@ -16,7 +16,7 @@ database_url = os.getenv('DATABASE_URL')
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-# DB接続URLの設定（環境変数がなければローカルの設定を使用）
+# DB接続URLの設定
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or \
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -102,7 +102,7 @@ def seed_data():
     for p_id, name, t_id, atk, df, spd in pokemons:
         db.session.add(PokemonMaster(pokemon_id=p_id, pokemon_name=name, type_id=t_id, attack=atk, defense=df, speed=spd))
     
-    # 3. 相性データの登録（効果抜群2.0、いまひとつ0.5 の主要な組み合わせ）
+    # 3. 相性データの登録（主要な組み合わせ）
     eff_data = [
         (2,4,2.0),(2,3,0.5),(2,2,0.5),(2,6,2.0),(2,12,2.0),(3,2,2.0),(3,4,0.5),(3,3,0.5),(3,9,2.0),(3,13,2.0),
         (4,3,2.0),(4,2,0.5),(4,4,0.5),(4,9,2.0),(4,13,2.0),(5,3,2.0),(5,5,0.5),(5,4,0.5),(5,10,2.0),
@@ -140,10 +140,11 @@ def index():
     # 対戦相手が選ばれた場合のロジック
     if enemy_id:
         enemy = PokemonMaster.query.get(enemy_id)
-        # 1. 自分の手持ちの中から
+        
+        # 1. 自分の手持ちの中から (UserPokemonを結合してメモも取得)
         # 2. 相手のタイプに対して効果抜群の順、
         # 3. さらに素早さが高い順に並び替え
-        query = db.session.query(PokemonMaster, TypeEffectiveness)\
+        query = db.session.query(PokemonMaster, TypeEffectiveness, UserPokemon)\
             .join(UserPokemon, UserPokemon.pokemon_id == PokemonMaster.pokemon_id)\
             .join(TypeEffectiveness, TypeEffectiveness.attack_type_id == PokemonMaster.type_id)\
             .filter(UserPokemon.user_id == 1)\
