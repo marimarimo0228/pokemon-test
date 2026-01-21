@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from models import db, PokemonMaster, UserPokemon, Type, TypeEffectiveness
 from dotenv import load_dotenv
 
@@ -19,24 +19,25 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# --- 121体の初期データ投入関数 ---
+# --- 初期データ投入関数 ---
 def seed_data():
-    """初期データの投入（既にデータがある場合はスキップ）"""
+    """初期データの投入"""
     if Type.query.first():
         return 
 
     print("🌱 世界を創造（データ投入）しています...")
     
-    # 1. タイプ
+    # 1. タイプ (エスパーはID:11、はがね・フェアリーを追加)
     types = [
         (1, 'ノーマル'), (2, 'ほのお'), (3, 'みず'), (4, 'くさ'), (5, 'でんき'),
         (6, 'こおり'), (7, 'かくとう'), (8, 'どく'), (9, 'じめん'), (10, 'ひこう'),
-        (11, 'エスパー'), (12, 'むし'), (13, 'いわ'), (14, 'ゴースト'), (15, 'ドラゴン')
+        (11, 'エスパー'), (12, 'むし'), (13, 'いわ'), (14, 'ゴースト'), (15, 'ドラゴン'),
+        (16, 'はがね'), (17, 'フェアリー')
     ]
     for t_id, t_name in types:
         db.session.add(Type(type_id=t_id, type_name=t_name))
     
-    # 2. ポケモン121体
+    # 2. ポケモン (既存121体に加え、新タイプ用のサンプルを追加しても良いが今回は枠のみ)
     pokemons = [
         (1,'フシギダネ',4,49,49,45), (2,'フシギソウ',4,62,63,60), (3,'フシギバナ',4,82,83,80),
         (4,'ヒトカゲ',2,52,43,65), (5,'リザード',2,64,58,80), (6,'リザードン',2,84,78,100),
@@ -98,13 +99,20 @@ def seed_data():
     for p_id, name, t_id, atk, df, spd in pokemons:
         db.session.add(PokemonMaster(pokemon_id=p_id, pokemon_name=name, type_id=t_id, attack=atk, defense=df, speed=spd))
     
-    # 3. 相性データ
+    # 3. 相性データ（新タイプを含む主要な相性を追加）
     eff_data = [
+        # 既存
         (2,4,2.0),(2,3,0.5),(2,2,0.5),(2,6,2.0),(2,12,2.0),(3,2,2.0),(3,4,0.5),(3,3,0.5),(3,9,2.0),(3,13,2.0),
         (4,3,2.0),(4,2,0.5),(4,4,0.5),(4,9,2.0),(4,13,2.0),(5,3,2.0),(5,5,0.5),(5,4,0.5),(5,10,2.0),
         (6,4,2.0),(6,9,2.0),(6,10,2.0),(6,15,2.0),(7,1,2.0),(7,13,2.0),(7,6,2.0),
         (9,2,2.0),(9,5,2.0),(9,8,2.0),(9,13,2.0),(10,4,2.0),(10,7,2.0),(10,12,2.0),
-        (11,7,2.0),(11,8,2.0),(12,4,2.0),(12,11,2.0),(13,2,2.0),(13,6,2.0),(13,10,2.0),(13,12,2.0)
+        (11,7,2.0),(11,8,2.0),(12,4,2.0),(12,11,2.0),(13,2,2.0),(13,6,2.0),(13,10,2.0),(13,12,2.0),
+        # フェアリー(17)の相性
+        (17,15,2.0), (17,7,2.0), (17,17,1.0), (17,2,0.5), (17,8,0.5), (17,16,0.5),
+        # はがね(16)の相性
+        (16,17,2.0), (16,6,2.0), (16,13,2.0), (16,2,0.5), (16,3,0.5), (16,5,0.5), (16,16,0.5),
+        # エスパー(11)の相性
+        (11,7,2.0), (11,8,2.0), (11,11,0.5), (11,16,0.5)
     ]
     for atk, df, eff in eff_data:
         db.session.add(TypeEffectiveness(attack_type_id=atk, defense_type_id=df, effectiveness=eff))
@@ -123,7 +131,7 @@ with app.app_context():
 def index():
     my_party = UserPokemon.query.all()
     all_pokemon = PokemonMaster.query.order_by(PokemonMaster.pokemon_id).all()
-    all_types = Type.query.order_by(Type.type_id).all() # カスタム登録用
+    all_types = Type.query.order_by(Type.type_id).all() 
     
     enemy = None
     results = []
@@ -131,20 +139,29 @@ def index():
     
     if enemy_id:
         enemy = PokemonMaster.query.get(enemy_id)
-        # 手持ち情報(UserPokemon)も結合してメモを取得
-        query = db.session.query(PokemonMaster, TypeEffectiveness, UserPokemon)\
+        
+        # ★ここが重要修正★
+        # outerjoin を使い、相性データがない場合は 1.0 (等倍) として扱う
+        # これにより、手持ちのポケモンが必ず結果に含まれるようになります
+        query = db.session.query(
+                PokemonMaster, 
+                UserPokemon, 
+                func.coalesce(TypeEffectiveness.effectiveness, 1.0).label('eff_value')
+            )\
             .join(UserPokemon, UserPokemon.pokemon_id == PokemonMaster.pokemon_id)\
-            .join(TypeEffectiveness, TypeEffectiveness.attack_type_id == PokemonMaster.type_id)\
+            .outerjoin(TypeEffectiveness, and_(
+                TypeEffectiveness.attack_type_id == PokemonMaster.type_id,
+                TypeEffectiveness.defense_type_id == enemy.type_id
+            ))\
             .filter(UserPokemon.user_id == 1)\
-            .filter(TypeEffectiveness.defense_type_id == enemy.type_id)\
-            .order_by(TypeEffectiveness.effectiveness.desc(), PokemonMaster.speed.desc())
+            .order_by(func.coalesce(TypeEffectiveness.effectiveness, 1.0).desc(), PokemonMaster.speed.desc())
+        
         results = query.all()
 
     return render_template('index.html', my_party=my_party, all_pokemon=all_pokemon, all_types=all_types, results=results, enemy=enemy)
 
 @app.route('/add', methods=['POST'])
 def add_pokemon():
-    """既存のポケモンを手持ちに追加"""
     pokemon_id = request.form.get('pokemon_id')
     if pokemon_id:
         db.session.add(UserPokemon(pokemon_id=pokemon_id, memo=""))
@@ -153,30 +170,26 @@ def add_pokemon():
 
 @app.route('/add_custom', methods=['POST'])
 def add_custom_pokemon():
-    """★新機能: オリジナルポケモンを作成して手持ちに追加"""
     name = request.form.get('custom_name')
     type_id = request.form.get('custom_type_id')
     speed = request.form.get('custom_speed')
     memo = request.form.get('custom_memo')
 
     if name and type_id and speed:
-        # 1. 現在の最大IDを取得して +1 する
         max_id = db.session.query(func.max(PokemonMaster.pokemon_id)).scalar()
         new_id = (max_id + 1) if max_id else 122
 
-        # 2. マスタデータに追加
         new_master = PokemonMaster(
             pokemon_id=new_id,
             pokemon_name=name,
             type_id=int(type_id),
-            attack=50, # 攻撃・防御は今回は仮置き
+            attack=50, 
             defense=50,
             speed=int(speed)
         )
         db.session.add(new_master)
         db.session.commit()
 
-        # 3. 手持ちに追加
         new_user_poke = UserPokemon(pokemon_id=new_id, memo=memo)
         db.session.add(new_user_poke)
         db.session.commit()
@@ -185,7 +198,6 @@ def add_custom_pokemon():
 
 @app.route('/delete/<int:user_pokemon_id>', methods=['POST'])
 def delete_pokemon(user_pokemon_id):
-    """手持ちから削除"""
     target = UserPokemon.query.get(user_pokemon_id)
     if target:
         db.session.delete(target)
@@ -194,7 +206,6 @@ def delete_pokemon(user_pokemon_id):
 
 @app.route('/update/<int:user_pokemon_id>', methods=['POST'])
 def update_pokemon(user_pokemon_id):
-    """メモの更新"""
     target = UserPokemon.query.get(user_pokemon_id)
     if target:
         target.memo = request.form.get('memo')
@@ -203,16 +214,11 @@ def update_pokemon(user_pokemon_id):
 
 @app.route('/reset', methods=['POST'])
 def reset_data():
-    """★新機能: データを初期化（121体に戻す）"""
-    print("🔥 世界を初期化しています...")
-    # 全データを削除
     db.session.query(UserPokemon).delete()
     db.session.query(TypeEffectiveness).delete()
     db.session.query(PokemonMaster).delete()
     db.session.query(Type).delete()
     db.session.commit()
-    
-    # 初期データを再投入
     seed_data()
     return redirect(url_for('index'))
 
