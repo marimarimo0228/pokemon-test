@@ -94,10 +94,15 @@
                     <h5 class="mb-3">有利なポケモン (効果抜群順)</h5>
                     {% if results %}
                         <div class="list-group">
-                        {% for p_master, eff_row in results %}
+                        {% for p_master, eff_row, user_p in results %}
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-0">{{ p_master.pokemon_name }}</h6>
+                                    <h6 class="mb-0">
+                                        {{ p_master.pokemon_name }}
+                                        {% if user_p.memo %}
+                                            <span class="badge bg-warning text-dark ms-2">📝 {{ user_p.memo }}</span>
+                                        {% endif %}
+                                    </h6>
                                     <small class="text-muted">
                                         タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
                                     </small>
