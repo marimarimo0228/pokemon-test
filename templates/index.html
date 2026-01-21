@@ -2,109 +2,117 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ポケモンバトル支援システム </title>
+    <title>ポケモン対戦支援システム</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f0f8ff; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; }
-        .container { margin-top: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; color: #333; }
-        .party-list { list-style: none; padding: 0; }
-        .party-item { background: #fff; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-delete { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; }
-        .result-card { background-color: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; margin-top: 20px; border-radius: 8px; }
-        .badge-effectiveness { font-size: 1em; padding: 5px 10px; }
+        body { background-color: #f8f9fa; }
+        .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body>
+<body class="container py-4">
+    <h1 class="text-center mb-5 text-primary">ポケモン対戦支援システム</h1>
 
-<div class="container">
-    <div class="header">
-        <h1>ポケモンバトル支援システム </h1>
-    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-bold">手持ちポケモンの管理</div>
+                <div class="card-body">
+                    <form action="/add" method="POST" class="mb-4 d-flex gap-2">
+                        <select name="pokemon_id" class="form-select">
+                            <option value="">ポケモンを選択してください</option>
+                            {% for p in all_pokemon %}
+                            <option value="{{ p.pokemon_id }}">
+                                {{ p.pokemon_name }} ({{ p.type.type_name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary text-nowrap">登録</button>
+                    </form>
 
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card p-3 shadow-sm">
-                <h3>現在の手持ち </h3>
-                <ul class="party-list">
-                    {% for p in my_party %}
-                    <li class="party-item">
-                        <span><strong>{{ p.pokemon.pokemon_name }}</strong> <small class="text-muted">(ID:{{ p.pokemon.pokemon_id }})</small></span>
-                        <form action="{{ url_for('delete_pokemon', user_pokemon_id=p.user_pokemon_id) }}" method="POST" style="margin: 0;">
-                            <button type="submit" class="btn-delete">削除</button>
-                        </form>
-                    </li>
-                    {% endfor %}
-                    {% if not my_party %}
-                    <p class="text-muted">手持ちが空です！下記から登録してください！！</p>
-                    {% endif %}
-                </ul>
-
-                <hr>
-
-                <h5>新しいポケモンを登録 ⚔️</h5>
-                <form action="{{ url_for('add_pokemon') }}" method="POST" class="d-flex gap-2">
-                    <select name="pokemon_id" class="form-select" required>
-                        <option value="">選択してください</option>
-                        {% for p in all_pokemon %}
-                        <option value="{{ p.pokemon_id }}">{{ p.pokemon_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">登録</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-md-7">
-            <div class="card p-3 shadow-sm border-danger">
-                <h3>対戦相手を選択 </h3>
-                <form action="/" method="GET" class="d-flex gap-2 mb-3">
-                    <select name="enemy_id" class="form-select" required>
-                        <option value="">相手ポケモンを選んでください</option>
-                        {% for p in all_pokemon %}
-                        <option value="{{ p.pokemon_id }}" {% if enemy and enemy.pokemon_id == p.pokemon_id %}selected{% endif %}>
-                            {{ p.pokemon_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-danger">解析</button>
-                </form>
-
-                {% if enemy %}
-                <div class="alert alert-warning">
-                    <strong>対戦相手: {{ enemy.pokemon_name }}</strong> (タイプID: {{ enemy.type_id }})
-                </div>
-
-                <h4>推奨ポケモン（選出）</h4>
-                {% if results %}
-                    {% for p_master, eff in results %}
-                    <div class="result-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-0">{{ p_master.pokemon_name }}</h5>
-                                <small>素早さ: {{ p_master.speed }} | 攻撃力: {{ p_master.attack }}</small>
-                            </div>
-                            <span class="badge bg-success badge-effectiveness">{{ eff }}倍！🔥</span>
-                        </div>
+                    <h5>現在の手持ち</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>名前/タイプ</th>
+                                    <th>メモ (Update)</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in my_party %}
+                                <tr>
+                                    <td>
+                                        <div><strong>{{ p.pokemon.pokemon_name }}</strong></div>
+                                        <span class="badge bg-secondary">{{ p.pokemon.type.type_name }}</span>
+                                    </td>
+                                    <td>
+                                        <form action="/update/{{ p.user_pokemon_id }}" method="POST" class="d-flex">
+                                            <input type="text" name="memo" value="{{ p.memo }}" class="form-control form-control-sm me-1" placeholder="メモ">
+                                            <button type="submit" class="btn btn-sm btn-success">保存</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form action="/delete/{{ p.user_pokemon_id }}" method="POST">
+                                            <button type="submit" class="btn btn-sm btn-danger">削除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not my_party %}
+                                <tr><td colspan="3" class="text-center text-muted">手持ちポケモンがいません</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-danger mt-3">手持ちの中に、有利な相性のポケモンがいません</p>
-                {% endif %}
-                {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white fw-bold">対戦解析</div>
+                <div class="card-body">
+                    <form action="/" method="GET" class="mb-4 d-flex gap-2">
+                        <select name="enemy_id" class="form-select">
+                            <option value="">対戦相手を選択してください</option>
+                            {% for p in all_pokemon %}
+                            <option value="{{ p.pokemon_id }}" {% if enemy and enemy.pokemon_id == p.pokemon_id %}selected{% endif %}>
+                                {{ p.pokemon_name }} ({{ p.type.type_name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-danger text-nowrap">解析開始</button>
+                    </form>
+
+                    {% if enemy %}
+                    <div class="alert alert-warning">
+                        <strong>相手: {{ enemy.pokemon_name }}</strong> <br>
+                        タイプ: <b>{{ enemy.type.type_name }}</b>
+                    </div>
+
+                    <h5 class="mb-3">有利なポケモン (効果抜群順)</h5>
+                    {% if results %}
+                        <div class="list-group">
+                        {% for p_master, eff_row in results %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ p_master.pokemon_name }}</h6>
+                                    <small class="text-muted">
+                                        タイプ: {{ p_master.type.type_name }} / 素早さ: {{ p_master.speed }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-danger rounded-pill">{{ eff_row.effectiveness }}倍</span>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-danger">手持ちの中に有利な（効果抜群の）ポケモンがいません。</p>
+                    {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-
-    <footer class="mt-5 text-center text-muted">
-        <hr>
-        <p>&copy; 2026 フレンダーズ </p>
-    </footer>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
